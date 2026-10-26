@@ -1,0 +1,393 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova AI — Qwen</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#0b0c12; --panel:#11131c; --card:#171a25;
+  --border:#292d3c; --text:#f4f5fc; --muted:#969bad;
+  --purple:#9879ff; --blue:#648aff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,sans-serif;height:100dvh}
+button,textarea{font:inherit}
+button{cursor:pointer;color:inherit}
+.app{height:100dvh;display:flex}
+aside{width:250px;flex-shrink:0;background:var(--panel);
+  border-right:1px solid var(--border);padding:18px;
+  display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:11px;font-size:20px;font-weight:850}
+.logo{width:39px;height:39px;display:grid;place-items:center;
+  border-radius:13px;background:linear-gradient(135deg,var(--purple),var(--blue))}
+button,.pill{transition:background .18s,border-color .18s}
+.new,.history button{border:1px solid var(--border);border-radius:11px;
+  padding:12px;background:var(--card);text-align:left}
+.new:hover,.history button:hover{border-color:var(--purple)}
+.small-label{font-size:11px;letter-spacing:1.4px;color:var(--muted);font-weight:800}
+.history{display:flex;flex-direction:column;gap:7px;overflow:auto}
+.history button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.history button.active{border-color:var(--purple);background:#211c36}
+.side-bottom{margin-top:auto;border-top:1px solid var(--border);
+  padding-top:15px;font-size:12px;color:var(--muted);line-height:1.8}
+main{min-width:0;flex:1;display:flex;flex-direction:column}
+.top{height:64px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.pill{font-size:12px;border:1px solid var(--border);
+  border-radius:10px;padding:8px 11px;background:var(--card)}
+.status{font-size:12px;color:var(--muted)}
+.status:before{content:"";display:inline-block;width:7px;height:7px;
+  border-radius:50%;background:#43d99b;margin-right:8px}
+.status.off:before{background:#f0a34e}
+#scroll{flex:1;overflow:auto;padding:26px 20px}
+#messages{max-width:790px;margin:auto;width:100%}
+.welcome{min-height:54vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center}
+.hero{width:66px;height:66px;border-radius:22px;display:grid;
+  place-items:center;font-size:30px;background:#8e70ff20;
+  border:1px solid #8e70ff70;margin-bottom:22px}
+h1{font-size:clamp(30px,4vw,44px);letter-spacing:-1.7px;line-height:1.12;margin:0}
+.gradient{background:linear-gradient(100deg,#bba8ff,#79a8ff);
+  color:transparent;background-clip:text}
+.intro{font-size:14px;color:var(--muted);line-height:1.7;
+  max-width:430px;margin:16px 0 25px}
+.examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;width:100%}
+.example{padding:15px;text-align:left;border:1px solid var(--border);
+  background:var(--panel);border-radius:13px}
+.example:hover{background:#1d1b30;border-color:var(--purple)}
+.example strong{display:block;font-size:13px;margin-bottom:6px}
+.example span{font-size:12px;color:var(--muted)}
+.message{display:flex;gap:12px;margin:22px 0 27px;align-items:flex-start}
+.avatar{width:34px;height:34px;flex-shrink:0;border-radius:11px;
+  display:grid;place-items:center;background:var(--card);border:1px solid var(--border)}
+.avatar.ai{background:linear-gradient(135deg,var(--purple),var(--blue));border:0}
+.body{min-width:0;flex:1;padding-top:4px;font-size:14px;line-height:1.8;
+  overflow-wrap:anywhere}
+.name{font-size:12px;font-weight:800;margin-bottom:7px;color:#cdd0df}
+.user .body{background:var(--card);padding:12px 14px;border-radius:12px;border:1px solid var(--border)}
+.body pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:auto;
+  background:#080910;border:1px solid var(--border);border-radius:9px;padding:13px}
+.body code{background:#252839;border-radius:4px;padding:2px 4px;font-size:.92em}
+.body pre code{background:transparent;padding:0}
+.composer-area{padding:10px 20px 16px;background:linear-gradient(transparent,var(--bg) 12%)}
+.composer{max-width:790px;margin:auto;border:1px solid #393d51;
+  border-radius:17px;background:var(--panel);padding:12px 13px 9px}
+.composer:focus-within{border-color:var(--purple)}
+textarea{width:100%;display:block;resize:none;max-height:160px;min-height:30px;
+  border:0;outline:0;background:transparent;color:var(--text);font-size:14px;line-height:1.6}
+textarea::placeholder{color:#777c91}
+.bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hint{font-size:10px;color:var(--muted)}
+#send{border:0;border-radius:11px;width:38px;height:38px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));font-size:21px;font-weight:800}
+#send:disabled{opacity:.5;cursor:wait}
+.disclaimer{text-align:center;color:#757a8d;font-size:10px;margin:10px auto 0;max-width:790px}
+#newMobile{display:none}
+@media(max-width:680px){
+ aside{display:none}.top{height:56px;padding:0 12px}
+ #newMobile{display:block}.composer-area{padding:8px 10px 12px}
+ #scroll{padding:14px 12px 22px}.examples{grid-template-columns:1fr}
+ .example{padding:12px}.welcome{min-height:45vh}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><div class="logo">✦</div>Nova AI</div>
+    <button class="new" id="new">＋ &nbsp; New chat</button>
+    <div class="small-label">RECENT CHATS</div>
+    <div class="history" id="history"></div>
+    <div class="side-bottom">
+      <strong style="color:#eee">Nova AI</strong><br>
+      Local Qwen model<br>
+      <span id="sideModel">qwen2.5:0.5b</span>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <button class="new" id="newMobile">＋ New</button>
+      <div class="pill">✦ &nbsp; Nova AI · Qwen</div>
+      <div class="status off" id="status">Checking model…</div>
+    </header>
+
+    <section id="scroll">
+      <div id="messages"></div>
+    </section>
+
+    <footer class="composer-area">
+      <div class="composer">
+        <textarea id="input" rows="1" maxlength="6000"
+          placeholder="Message Nova AI..."></textarea>
+        <div class="bottom">
+          <span class="hint">Enter to send · Shift + Enter for a new line</span>
+          <button id="send" aria-label="Send">↑</button>
+        </div>
+      </div>
+      <div class="disclaimer">
+        Responses are generated by a small language model and may contain errors.
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let chats = [];
+let current = null;
+let busy = false;
+
+function createChat() {
+  current = {id: crypto.randomUUID(), title:"New chat", messages:[]};
+  chats.unshift(current);
+  renderHistory();
+  renderChat();
+  $("input").focus();
+}
+
+function renderHistory() {
+  const root = $("history");
+  root.replaceChildren();
+  chats.slice(0,30).forEach(chat => {
+    const button = document.createElement("button");
+    button.textContent = "▤  " + chat.title;
+    button.className = chat.id === current?.id ? "active" : "";
+    button.onclick = () => {
+      current = chat;
+      renderHistory();
+      renderChat();
+    };
+    root.appendChild(button);
+  });
+}
+
+function welcome() {
+  const section = document.createElement("section");
+  section.className = "welcome";
+
+  const hero = document.createElement("div");
+  hero.className = "hero";
+  hero.textContent = "✦";
+
+  const heading = document.createElement("h1");
+  heading.append("Your own AI, ");
+  const span = document.createElement("span");
+  span.className = "gradient";
+  span.textContent = "your own rules.";
+  heading.appendChild(span);
+
+  const intro = document.createElement("p");
+  intro.className = "intro";
+  intro.textContent =
+    "Chat, code, brainstorm, and learn with Nova, powered by your Qwen model.";
+
+  const examples = document.createElement("div");
+  examples.className = "examples";
+
+  [
+    ["🎮 Build a game","Create a browser game","Write a simple playable browser game in HTML, CSS, and JavaScript."],
+    ["🧠 Learn AI","Explain neural networks","Explain how a neural network works in simple terms."],
+    ["💡 Brainstorm","Get project ideas","Give me five fun web app ideas I can build."],
+    ["💻 Write code","Make a website","Write a modern responsive landing page in HTML and CSS."]
+  ].forEach(([title,subtitle,prompt]) => {
+    const b = document.createElement("button");
+    b.className = "example";
+    const strong = document.createElement("strong");
+    strong.textContent = title;
+    const small = document.createElement("span");
+    small.textContent = subtitle;
+    b.append(strong,small);
+    b.onclick = () => { $("input").value = prompt; resize(); send(); };
+    examples.appendChild(b);
+  });
+
+  section.append(hero,heading,intro,examples);
+  return section;
+}
+
+// Display model output as text, with limited formatting.
+// No raw model HTML is ever executed.
+function formatText(text) {
+  const fragment = document.createDocumentFragment();
+  const lines = text.split("\n");
+  let inCode = false;
+  let codeLines = [];
+  let paragraph = [];
+
+  function addParagraph() {
+    if (!paragraph.length) return;
+    const p = document.createElement("p");
+    p.style.margin = "0 0 10px";
+    p.textContent = paragraph.join("\n");
+    fragment.appendChild(p);
+    paragraph = [];
+  }
+
+  lines.forEach(line => {
+    if (line.trim().startsWith("```")) {
+      if (!inCode) {
+        addParagraph();
+        inCode = true;
+        codeLines = [];
+      } else {
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        code.textContent = codeLines.join("\n");
+        pre.appendChild(code);
+        fragment.appendChild(pre);
+        inCode = false;
+      }
+    } else if (inCode) {
+      codeLines.push(line);
+    } else if (!line.trim()) {
+      addParagraph();
+    } else {
+      paragraph.push(line);
+    }
+  });
+
+  if (inCode) {
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = codeLines.join("\n");
+    pre.appendChild(code);
+    fragment.appendChild(pre);
+  }
+  addParagraph();
+  return fragment;
+}
+
+function addMessage(role,text) {
+  const row = document.createElement("article");
+  row.className = "message " + role;
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar" + (role === "assistant" ? " ai" : "");
+  avatar.textContent = role === "user" ? "Y" : "✦";
+
+  const body = document.createElement("div");
+  body.className = "body";
+
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = role === "user" ? "You" : "Nova AI";
+
+  const content = document.createElement("div");
+  content.appendChild(formatText(text));
+  body.append(name,content);
+  row.append(avatar,body);
+  $("messages").appendChild(row);
+  $("scroll").scrollTop = $("scroll").scrollHeight;
+  return row;
+}
+
+function renderChat() {
+  const root = $("messages");
+  root.replaceChildren();
+  if (!current || current.messages.length === 0) {
+    root.appendChild(welcome());
+  } else {
+    current.messages.forEach(m => addMessage(m.role,m.content));
+  }
+  $("scroll").scrollTop = $("scroll").scrollHeight;
+}
+
+function resize() {
+  const input = $("input");
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight,160) + "px";
+}
+
+function setBusy(value) {
+  busy = value;
+  $("send").disabled = value;
+  $("input").disabled = value;
+  $("status").textContent = value ? "Qwen is thinking…" : "Ready";
+  $("status").classList.toggle("off",value);
+}
+
+async function checkHealth() {
+  try {
+    const r = await fetch("/api/health");
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error();
+    $("status").textContent = data.installed ? "Qwen ready" : "Model missing";
+    $("status").classList.toggle("off",!data.installed);
+    if (!data.installed) {
+      $("status").textContent = "Install Qwen";
+      $("status").classList.add("off");
+    }
+  } catch {
+    $("status").textContent = "Ollama offline";
+    $("status").classList.add("off");
+  }
+}
+
+async function send() {
+  if (busy) return;
+  const message = $("input").value.trim();
+  if (!message) return;
+
+  if (!current) createChat();
+
+  const chat = current;
+  if (chat.messages.length === 0) {
+    chat.title = message.length > 32 ? message.slice(0,32) + "…" : message;
+    renderHistory();
+  }
+
+  chat.messages.push({role:"user",content:message});
+  renderChat();
+  $("input").value = "";
+  resize();
+  setBusy(true);
+
+  const waiting = addMessage("assistant","Qwen is generating a response…");
+  waiting.querySelector(".body").style.opacity = ".6";
+
+  const history = chat.messages.slice(0,-1).slice(-10);
+
+  try {
+    const response = await fetch("/api/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message,history})
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Request failed.");
+
+    chat.messages.push({role:"assistant",content:data.answer});
+    renderChat();
+  } catch(error) {
+    waiting.remove();
+    addMessage("assistant","⚠️ " + error.message);
+  } finally {
+    setBusy(false);
+    $("input").focus();
+  }
+}
+
+$("send").addEventListener("click",send);
+$("input").addEventListener("input",resize);
+$("input").addEventListener("keydown",event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    send();
+  }
+});
+$("new").addEventListener("click",createChat);
+$("newMobile").addEventListener("click",createChat);
+
+createChat();
+checkHealth();
+setInterval(checkHealth,30000);
+</script>
+</body>
+</html>
